@@ -1,44 +1,88 @@
-/**
- * The implementation of Two Phase Commit.
- * Every process sends a message to the coordinator.
- * The coordinator waits messages from majority of processes.
- * 
- *   @author naohaya
- */
+/*
+* TwoPhaseCommit
+* The simple implementation of Two-Phase Commit Protocol.
+* @naohaya
+*/
 
 public class ThreePhaseCommit extends Process {
+	int id;
+	MessageQueue mq;
 
-
-	public ThreePhaseCommit(int id, MessageQueue mq) {
-		/*
-		 * call the constructor of superclass.
-		 */
+	public ThreePhaseCommit (int id, MessageQueue mq) {
 		super(id,mq);
+		this.id = id;
+		this.mq = mq;
+			
 		
-		this.id = id;
 	}
 
-	public ThreePhaseCommit(int id, MessageQueue mq, boolean failure) {
-		/*
-		 * call the constructor of superclass.
-		 */
-		super(id,mq,failure);
-
-		this.id = id;
-	}
-
-	public void run() {
+	public void run(){
 		super.run();
 
-		if (id > 0) {
-			/* 
-			* Coordinator
-			*/
 
+		int count = 0;
+		Object c = null;
+
+		if(id > 0) {
+			// worker
+
+			while(true){
+				if((c=receive()) != null ) {
+					Integer i = (Integer)((Message)c).getContent();
+					if (i.equals(1)){
+						System.out.println("Received a prepare msg. from "+((Message) c).getSource() +" at id=" + this.id);
+						send(0, new DefaultMessage(this.id, new Object()));
+					}
+					else if (i.equals(2)) {
+						System.out.println("Received a precommit msg. from "+((Message) c).getSource() + "at id=" + this.id);
+						send(0, new DefaultMessage(this.id, new Object()));
+					}
+					else if (i.equals(3)){
+						System.out.println("Received a commit msg. from "+((Message) c).getSource() + " at id=" + this.id);
+						break;
+					}
+					
+				}
+			}
 		} else {
-			/*
-			* Woker
-			*/
+			// coordinator
+			count = 0;
+			while (count < mq.getTotalNum() -1) {
+				send(count+1, new DefaultMessage(0, new Integer(1)));
+				count ++;
+			}
+
+			count = 0;
+			while (count < mq.getTotalNum() -1) {
+				if((c=receive()) != null ) {
+					System.out.println("Received an ack from "+((Message) c).getSource()+ " at id=" + this.id);
+					count ++;
+				}
+			}
+
+			// sending pre-commit msgs.
+			count = 0;
+			while (count < mq.getTotalNum() -1) {
+				send(count+1, new DefaultMessage(0, new Integer(2)));
+				count ++;
+			}
+
+
+
+			count = 0;
+			while (count < mq.getTotalNum() -1) {
+				if((c=receive()) != null ) {
+					System.out.println("Received an ack from "+((Message) c).getSource()+ " at id=" + this.id);
+					count ++;
+				}
+			}
+
+			// sending commit msgs.
+			count = 0;
+			while (count < mq.getTotalNum() -1) {
+				send(count+1, new DefaultMessage(0, new Integer(3)));
+				count ++;
+			}
 
 		}
 	}

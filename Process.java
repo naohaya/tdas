@@ -4,9 +4,6 @@
  * @author naohaya
  */
 
-import java.util.Timer;
-import java.util.TimerTask;
-
 public class Process extends Thread {
 	/**
 	 * メッセージキュー
@@ -27,11 +24,6 @@ public class Process extends Thread {
 	 * 故障するまでの時間指定
 	 */
 	long ttf = 0; 	// Time to failure.
-
-	/**
-	*
-	*/
-	boolean failue = false;
 	
 	/**
 	 * The constructor receives process id and message queue.
@@ -42,19 +34,6 @@ public class Process extends Thread {
 	Process(int id, MessageQueue mq) {
 		this.id = id;
 		this.mq = mq;
-	}
-
-	/**
-	 * The constructor receives process id and message queue.
-	 * @param id プロセスID
-	 * @param mq メッセージキュー
-	 * @param d 遅延時間 (msec.)
-	 * @throws InterruptedException 
-	 */
-	Process(int id, MessageQueue mq, boolean f) {
-		this.id = id;
-		this.mq = mq;
-		this.failue = f;
 	}
 	
 	/**
@@ -118,7 +97,6 @@ public class Process extends Thread {
 	 */
 	public void delayStart() {
 		try {
-			yield();
 			Thread.sleep(delay);
 		} catch(InterruptedException ie) {
 			
@@ -135,59 +113,13 @@ public class Process extends Thread {
 //		System.out.println("p"+id+" is delayed for "+msec+" msec.");
 		
 	}
-
-	/**
-	* The setter for ttf
-	* @param timeToFail
-	*/
-	public void setTTF(long timeToFail) {
-		this.ttf = timeToFail;
-	}
-
-	/**
-	* The getter for ttf
-	* @return ttf
-	*/
-	public long getTTF(){
-		return this.ttf;
-	}
-
-	/**
-	* The method is to fail a process
-	*/
-	public void fail(long timeToFail, Thread th){
-		setTTF(timeToFail);
-		TimerTask shutdown = new TimerTask(){
-			public void run() {
-				// interrupt th
-				th.interrupt();
-
-			}
-		};
-
-		Timer timer = new Timer();
-		timer.schedule(shutdown, getTTF());
-	}
-
+	
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
-		if (!failue) {
-			// normal process
-			// delayed start with random generated time.
-			delayStart((long) Math.ceil(Math.random()*100)); 
-		} else {
-			// failed process
-			try{
-				yield();
-				Thread.sleep((long) Math.ceil(Math.random()*100));
-
-			} catch (InterruptedException ie) {
-				//ie.printStackTrace();
-				//System.exit(1);
-			}
-
-		}
+		
+		// delayed start with random generated time.
+		delayStart((long) Math.ceil(Math.random()*100)); 
 				
 
 	}
