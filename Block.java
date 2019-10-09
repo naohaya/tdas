@@ -39,6 +39,14 @@ public class Block
 		return this.ownHash;
 	}
 
+	public void setOwnHash(BigInteger ownhash) {
+		this.ownHash = ownhash;
+	}
+
+	public void setNonce(long nonce) {
+		this.nonce = nonce;
+	}
+
 	public long getNonce() {
 		return this.nonce;
 	}

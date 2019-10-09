@@ -12,7 +12,7 @@ class TestMining {
 
 			for(Result r : results) {
 			//	System.out.println(r.getHashValue().toString(16));
-				if(Miner.isHit(m.generatingTarget(r.getDifficultyBits()), r.getHashValue())){
+				if(Miner.isHit(Miner.generatingTarget(r.getDifficultyBits()), r.getHashValue())){
 			//	if(Miner.isHit(m.getTarget().toString(16), r.getHashValue().toString(16))){
 					System.out.println("Result: "+r.getHashValue().toString(16));
 					System.out.println("Nonce: "+r.getNonce());

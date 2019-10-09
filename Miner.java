@@ -5,7 +5,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 class Miner 
 {
 
-	private Block latestBlock; // latest block in the chain.
+	private Block latestBlock = null; // latest block in the chain.
 	private int hitCounter = 0; // Num. of mining results that match the target.
 	private int maxMiningValues = 100; // Num. of values return to each client.
 	private int difficultyBits = 1;	 // The difficulty bit.
@@ -16,31 +16,31 @@ class Miner
 	/**
 	* Constructor
 	*/
-
 	Miner (Block block, int diffbits) {
-		this(diffbits);
-		this.latestBlock = block;
-
-	}
-
-	Miner (int diffbits) {
 		this.difficultyBits = diffbits;
-		this.target = generatingTarget(diffbits);
+		this.target = this.generatingTarget(this.difficultyBits);
+		this.latestBlock = block;		
+
 	}
+
+
 	
 	/**
 	* A method for obtaining hash values from outside.
 	* It requires mutual exclusive access.
 	*/
 	public synchronized ArrayList<Result> getHashValues() {
-		return mining();
+		return mining(this.latestBlock);
 	}
 
+	/**
+	* obsolete
 	public String createDigest() {
 		return createDigest(this.latestBlock);
 	}
+	*/
 
-	private String createDigest(Block block) {
+	public static String createDigest(Block block) {
 		String digest = Integer.toString(block.getBlockNum()) 
 		+ Long.toString(block.getNonce())
 		+ block.getPrevHash().toString()		
@@ -87,9 +87,40 @@ class Miner
 		this.difficultyBits++;
 	}
 
-	public BigInteger generatingTarget(int diffbits) {
-		BigInteger new_target = BigInteger.valueOf(baseTarget);
-		new_target = new_target.pow(256-this.difficultyBits); // target should be 2^(256-diffbits)
+	private Block createInitialBlock() {
+		boolean flag = true;
+		Block initBlock = new Block(1, 1, 0, 
+									new Data("This is the first block in the chain."), 
+									new BigInteger("0", 16), 
+									new BigInteger("0", 16));
+		while(flag) {
+			ArrayList<Result> results = mining(initBlock);
+
+			for(Result r : results) {
+			//	System.out.println(r.getHashValue().toString(16));
+				if(this.isHit(this.generatingTarget(r.getDifficultyBits()), r.getHashValue())){
+			//	if(Miner.isHit(m.getTarget().toString(16), r.getHashValue().toString(16))){
+					System.out.println("Result: "+r.getHashValue().toString(16));
+					System.out.println("Nonce: "+r.getNonce());
+
+					initBlock.setOwnHash(r.getHashValue());
+					flag = false;
+					break;
+				}
+			}
+		}
+
+		return initBlock;
+	}
+
+	public static String createHashedDigest(String digest, long nonce) {
+		String result = DigestUtils.sha3_256Hex(digest+Long.toString(nonce));
+		return result;
+	}
+
+	public static BigInteger generatingTarget(int diffbits) {
+		BigInteger new_target = BigInteger.valueOf(2);
+		new_target = new_target.pow(256-diffbits); // target should be 2^(256-diffbits)
 //		System.out.println("New target: " + tgt.toString(16) + " diffbits: " + diffbits);
 		return new_target;
 	}
@@ -98,15 +129,15 @@ class Miner
 		return this.target;
 	}
 
-	private ArrayList<Result> mining() {
+	private ArrayList<Result> mining(Block block) {
 		ArrayList<Result> results = new ArrayList<Result>();
-		String digest = createDigest();
+		String digest = this.createDigest(block);
 		String result_string = null;
 		BigInteger result;
 		//long l_target = Math.pow(2, 256-this.difficultyBits);
 
 		for(int count = 0; count < this.maxMiningValues; count++) {
-			result_string = DigestUtils.sha3_256Hex(digest+Long.toString(nonce));
+			result_string = this.createHashedDigest(digest, nonce);
 			result = new BigInteger(result_string, 16);
 			results.add(new Result(result,nonce,getDifficultyBits()));
 			if(target.compareTo(result) == 1){
