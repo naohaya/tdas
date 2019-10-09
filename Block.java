@@ -4,13 +4,15 @@ public class Block
 {
 
 	private int blockNum = -1;
+	private int difficultyBits = 0;
 	private long nonce = -1;
 	private Data data;
 	private BigInteger prevHash;
 	private BigInteger ownHash;
 
-	public Block(int blockNum, long nonce, Data data, BigInteger prevHash, BigInteger ownHash) {
+	public Block(int blockNum, int diffbits, long nonce, Data data, BigInteger prevHash, BigInteger ownHash) {
 		this.blockNum = blockNum;
+		this.difficultyBits = diffbits;
 		this.nonce = nonce;
 		this.data = data;
 		this.prevHash = prevHash;
@@ -19,6 +21,10 @@ public class Block
 
 	public int getBlockNum() {
 		return this.blockNum;
+	}
+
+	public int getDifficultyBits() {
+		return this.difficultyBits;
 	}
 	
 	public Data getData() {

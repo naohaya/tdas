@@ -17,15 +17,6 @@ public class TestAlgorithm extends Process {
 		
 		this.id = id;
 	}
-
-	public TestAlgorithm(int id, MessageQueue mq, boolean failure) {
-		/*
-		 * call the constructor of superclass.
-		 */
-		super(id,mq,failure);
-
-		this.id = id;
-	}
 	
 	public void run(){
 		/*
@@ -37,7 +28,6 @@ public class TestAlgorithm extends Process {
 		/*
 		 * 以下アルゴリズム本体
 		 */
-
 		Object c = null;
 		int count = 0;
 		
@@ -74,7 +64,6 @@ public class TestAlgorithm extends Process {
 			System.out.println("Received " + count + " message(s).");
 			
 		}
-
 	}
 
 }
