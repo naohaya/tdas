@@ -87,7 +87,7 @@ class Miner
 		this.difficultyBits++;
 	}
 
-	private Block createInitialBlock() {
+	public Block createInitialBlock() {
 		boolean flag = true;
 		Block initBlock = new Block(1, 1, 0, 
 									new Data("This is the first block in the chain."), 

@@ -23,47 +23,22 @@ public class MiningNode extends Process
 		if (id == 0) {
 			Data data = new Data("This is the first block in the chain.");
 			initialBlock = new Block(1, 1, 0, data, new BigInteger("0", 16), new BigInteger("0", 16));
-			Miner miner = new Miner(initialBlock, 20);
-		
-			while(flag) {
-				ArrayList<Result> results = miner.getHashValues();
+			Miner miner = new Miner(initialBlock, 20); // create a miner.
 
-				for(Result r : results) {
-			//	System.out.println(r.getHashValue().toString(16));
-					if(Miner.isHit(Miner.generatingTarget(r.getDifficultyBits()), r.getHashValue())){
-			//	if(Miner.isHit(m.getTarget().toString(16), r.getHashValue().toString(16))){
-						System.out.println("Result: "+r.getHashValue().toString(16));
-						System.out.println("Nonce: "+r.getNonce());
-						System.out.println("Target: "+miner.getTarget().toString(16));
-					
-						initialBlock.setOwnHash(r.getHashValue());
-						initialBlock.setNonce(r.getNonce());
-						flag = false;
-						break;
-					}
-				}
-			}
+			initialBlock = miner.createInitialBlock(); // create an initial block of the chain.
 
-			blockChain.add(initialBlock);
+			blockChain.add(initialBlock); // add the initial block into the chain.
 
-			for(int count = 1; count < super.getMessageQueue().getTotalNum(); count++) {
-				send(count, new DefaultMessage(0, initialBlock));
-				System.out.println("send a block to "+count);
+			broadcastBlock(id, initialBlock); // send the first block to others.
 
-			}
 
 		}
 		else{
-			Object c;
+			Block b;
 			while(true){
-				if ((c = receive()) != null) {
-					Block b = (Block) ((Message)c).getContent();
-					System.out.println(id+": receive a block of "+b.getOwnHash().toString(16));
-					blockChain.add(b);
+				if ((b = receiveBlock()) != null) { // receive the first block.
+					blockChain.add(b); // add the first block in the own chain.
 					break;
-				}
-				else{
-					System.out.println("no message at "+id);
 				}
 				try{
 					Thread.sleep(1000);
@@ -73,6 +48,68 @@ public class MiningNode extends Process
 
 		}
 
+
+	}
+
+	/**
+	* broadcast a block to every other node.
+	*/
+	private void broadcastBlock(int id, Block block) {
+		for(int count = 0; count < super.getMessageQueue().getTotalNum(); count++) {
+			if (count != id) {
+				send(count, new DefaultMessage(id, block));
+				// System.out.println("send a block to "+count);
+			}
+
+		}
+	}
+
+	/*
+	* receive a block
+	*/
+	private Block receiveBlock() {
+		Object c;
+		if ((c = receive()) != null) {
+			Block b = (Block) ((Message)c).getContent();
+			System.out.println(id+": receive a block of "+b.getOwnHash().toString(16));
+
+			return b;
+		}
+		else {
+			System.out.println("no message at "+id);
+
+			return null;
+		}
+	}
+
+
+	/**
+	* check obtained hash values are valid or not.
+	*/
+    // results = miner.getHashValues(); // obtain hash values.
+	private Result checkHashValues(ArrayList<Result> results) {
+
+			for(Result r : results) {
+			//	System.out.println(r.getHashValue().toString(16));
+				if(Miner.isHit(Miner.generatingTarget(r.getDifficultyBits()), r.getHashValue())){
+					/*		
+					System.out.println("Result: "+r.getHashValue().toString(16));
+					System.out.println("Nonce: "+r.getNonce());
+					System.out.println("Target: "+m.getTarget().toString(16));
+					System.exit(0);
+					*/
+
+					return r; 
+				}
+			}
+
+			return null; // does not hit
+	}
+
+	/**
+	* output the own chain as a csv file.
+	*/
+	private void outputChain() {
 
 	}
 
