@@ -16,6 +16,8 @@ class Miner
 
 	/**
 	* Constructor
+	* @param block is the current latest block.
+	* @param diffbits is the current difficulty bits.
 	*/
 	Miner (Block block, int diffbits) {
 		this.difficultyBits = diffbits;
@@ -27,7 +29,7 @@ class Miner
 
 	
 	/**
-	* A method for obtaining hash values from outside.
+	* Obtaining hash values from outside.
 	* It requires mutual exclusive access.
 	*/
 	public synchronized ArrayList<Result> getHashValues() {
@@ -41,6 +43,10 @@ class Miner
 	}
 	*/
 
+	/**
+	* Creates a digest string from a block.
+	* @param block is the block to generate hash values by using its block header.
+	*/
 	public static String createDigest(Block block) {
 		String digest = Integer.toString(block.getBlockNum()) 
 		+ Long.toString(block.getNonce())
@@ -51,6 +57,10 @@ class Miner
 		return digest;
 	}
 
+	/**
+	* Sets new block as the latest block. 
+	* @param block is the current latest block. 
+	*/
 	public void setBlock(Block block) {
 		if(this.latestBlock == null)
 			this.latestBlock = block;
@@ -60,10 +70,18 @@ class Miner
 		
 	}
 
+	/**
+	* Updates the latest block.
+	* @param block is the block set as the latest block.
+	*/
 	public void updateBlock(Block block) {
 		setBlock(block);
 	}
 
+	/**
+	* Gets the latest block. 
+	* 
+	*/
 	public Block getBlock(){
 		if (latestBlock != null) {
 			return latestBlock;
@@ -73,26 +91,46 @@ class Miner
 		}
 	}
 
+	/**
+	* Reset the nonce counter.
+	*
+	*/
 	private void resetNonce() {
 		this.nonce = 0;
 	}
 
+	/**
+	* To get the current nonce.
+	*/
 	public long getNonce() {
 		return this.nonce;
 	}
 
+	/**
+	* Sets new difficulty bits. 
+	* @param bits is a new difficulty bits.
+	*/
 	public void setDifficultyBits(int bits) {
 		this.difficultyBits = bits;
 	}
 
+	/**
+	* To get the current difficulty bits. 
+	*/
 	public int getDifficultyBits() {
 		return this.difficultyBits;
 	}
 
+	/**
+	* Increments the difficulty bits (but it is not used this time...).
+	*/
 	private void incDifficultyBits() {
 		this.difficultyBits++;
 	}
 
+	/**
+	* Creates an initial block by using mining().
+	*/
 	public Block createInitialBlock() {
 		boolean flag = true;
 		Block initBlock = new Block(1, 1, 0, 
@@ -121,11 +159,21 @@ class Miner
 		return initBlock;
 	}
 
+	/**
+	* Creates a hash value using the sha3_256 algorithm from a digest and a nonce.
+	* @param digest is a digest of a block header. 
+	* @param nonce is the current nonce.
+	*/
 	public static String createHashedDigest(String digest, long nonce) {
 		String result = DigestUtils.sha3_256Hex(digest+Long.toString(nonce));
 		return result;
 	}
 
+	/**
+	* Generates a target for mining. 
+	* The value should be the block hash if it is smaller than the target.
+	* @param diffbits is the difficulty bits to generate the corresponding target. 
+	*/
 	public static BigInteger generatingTarget(int diffbits) {
 		BigInteger new_target = BigInteger.valueOf(2);
 		new_target = new_target.pow(256-diffbits); // target should be 2^(256-diffbits)
@@ -133,10 +181,18 @@ class Miner
 		return new_target;
 	}
 
+	/**
+	* getTarget is to get the current target.
+	*/ 
 	public BigInteger getTarget() {
 		return this.target;
 	}
 
+	/**
+	* Mining hash values using the latest block. 
+	* It generates the designated num. of hash values declared as maxMiningValues.  
+	* @param block is the current latest block in the chain.
+	*/
 	private ArrayList<Result> mining(Block block) {
 		ArrayList<Result> results = new ArrayList<Result>();
 		String digest = this.createDigest(block);
@@ -164,7 +220,12 @@ class Miner
 		return results;
 	}
 
-	// for judgeing the hash value is eligible or not according to the target.
+	/**
+	* Judgeing the hash value is eligible or not according to the target.
+	* @param target is the target to judge hash values. 
+	* @param hashValue is a mined hash value. 
+	* @return it returns {@code true} if the hash value is smaller than the target and it is eligible as new block hash. 
+	*/
 	public static boolean isHit(BigInteger target, BigInteger hashValue) {
 		if(target.compareTo(hashValue) == 1) {
 			return true;
