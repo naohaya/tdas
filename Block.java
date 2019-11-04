@@ -3,24 +3,34 @@ import java.math.BigInteger;
 public class Block
 {
 
+	/*
+	* Block header
+	*/
 	private int blockNum = -1;
 	private int difficultyBits = 0;
 	private long nonce = -1;
-	private Data data = null;
 	private BigInteger prevHash = null;
 	private BigInteger ownHash = null;
+	private String timestamp = null; // TODO: to be Date instead of String
+
+	/*
+	* Block content
+	*/
+	private Data data = null;
+
 
 	public Block(){
 
 	}
 
-	public Block(int blockNum, int diffbits, long nonce, Data data, BigInteger prevHash, BigInteger ownHash) {
+	public Block(int blockNum, int diffbits, long nonce, Data data, BigInteger prevHash, BigInteger ownHash, String ts) {
 		this.blockNum = blockNum;
 		this.difficultyBits = diffbits;
 		this.nonce = nonce;
 		this.data = data;
 		this.prevHash = prevHash;
 		this.ownHash = ownHash;
+		this.timestamp = ts;
 	}
 
 	public int getBlockNum() {
@@ -69,6 +79,14 @@ public class Block
 
 	public long getNonce() {
 		return this.nonce;
+	}
+
+	public void setTimestamp(String ts) {
+		this.timestamp = ts;
+	}
+
+	public String getTimestamp() { // return Date instead of String
+		return this.timestamp;
 	}
 	
 }

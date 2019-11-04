@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.math.BigInteger;
 import org.apache.commons.codec.digest.DigestUtils;
 
@@ -44,7 +45,8 @@ class Miner
 		String digest = Integer.toString(block.getBlockNum()) 
 		+ Long.toString(block.getNonce())
 		+ block.getPrevHash().toString()		
-		+ block.getOwnHash().toString();
+		+ block.getOwnHash().toString()
+		+ block.getTimestamp();
 
 		return digest;
 	}
@@ -56,6 +58,10 @@ class Miner
 		if(this.latestBlock.getBlockNum() < block.getBlockNum()) 
 			this.latestBlock = block;
 		
+	}
+
+	public void updateBlock(Block block) {
+		setBlock(block);
 	}
 
 	public Block getBlock(){
@@ -92,7 +98,8 @@ class Miner
 		Block initBlock = new Block(1, 1, 0, 
 									new Data("This is the first block in the chain."), 
 									new BigInteger("0", 16), 
-									new BigInteger("0", 16));
+									new BigInteger("0", 16),
+									Calendar.getInstance().getTime().toString());
 		while(flag) {
 			ArrayList<Result> results = mining(initBlock);
 
@@ -104,6 +111,7 @@ class Miner
 					System.out.println("Nonce: "+r.getNonce());
 
 					initBlock.setOwnHash(r.getHashValue());
+					initBlock.setTimestamp(Calendar.getInstance().getTime().toString());
 					flag = false;
 					break;
 				}
@@ -144,12 +152,12 @@ class Miner
 				hitCounter++; // increment hitCounter whenever a result matches the requirement.
 				if(hitCounter%10 == 0) {
 					// increment difficltyBits every 10 hits.
-					incDifficultyBits();
+					// incDifficultyBits();
 				}
 				
 			}
 
-			nonce++;
+			nonce++; // increment the nonce
 
 		}
 

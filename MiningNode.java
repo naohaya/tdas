@@ -1,11 +1,12 @@
 import java.util.ArrayList;
 import java.math.BigInteger;
 import java.util.UUID;
+import java.util.Calendar;
 
 public class MiningNode extends Process 
 {
 	int id;
-	int initialDifficulty = 12;
+	int difficultyBits = 20;
 	boolean flag = true;
 	Block initialBlock = null;
 	ArrayList<Block> blockChain = new ArrayList<Block>();
@@ -20,13 +21,17 @@ public class MiningNode extends Process
 		this.id = id;
 	}
 
+	/**
+	* The main procedure of the process.
+	*/
 	public void run() {
 		super.run();
 
+		// the procedure of Process 0.
 		if (id == 0) {
 			Data data = new Data("This is the first block in the chain.");
-			initialBlock = new Block(1, 1, 0, data, new BigInteger("0", 16), new BigInteger("0", 16));
-			Miner miner = new Miner(initialBlock, initialDifficulty); // create a miner.			
+			initialBlock = new Block(1, 1, 0, data, new BigInteger("0", 16), new BigInteger("0", 16), Calendar.getInstance().getTime().toString());
+			Miner miner = new Miner(initialBlock, difficultyBits); // create a miner.			
 
 			initialBlock = miner.createInitialBlock(); // create an initial block of the chain.
 
@@ -41,15 +46,17 @@ public class MiningNode extends Process
 				if ((b = receiveBlock()) != null) { // receive the first block.
 					//blockChain.add(b); // add the first block in the own chain.
 					addBlockToChain(b,blockChain);
+					miner.updateBlock(b);
 					//break;
 				}
 
 				miner.setBlock(blockChain.get(blockChain.size() - 1));
-				Result r = checkHashValues(miner.getHashValues()); // obtain hash values.
+				Result r = checkHashValues(miner.getHashValues()); // check the obtained hash values.
 				if(r != null) {
-					b = createBlock(r, blockChain);
-					addBlockToChain(b,blockChain);
-					broadcastBlock(id, b);
+					b = createBlock(r, blockChain); // create a block if there is an eligible hash value.
+					addBlockToChain(b,blockChain);  // add the created block into the chain.
+					miner.updateBlock(b);  // update the block as the latest block in the miner.
+					broadcastBlock(id, b); // broadcast the block to every other processes.
 
 					System.out.print("Found at Process " + id + "=>>");
 					System.out.print("Result: "+r.getHashValue().toString(16));
@@ -65,10 +72,11 @@ public class MiningNode extends Process
 			}
 
 			printChain(id, blockChain);
-			outputChain(id, blockChain);
-
+			outputChain(id, blockChain); // output information of each block in the chain.
+			debugPrint("Latest block is :"+miner.getBlock().getOwnHash().toString(16));
 
 		}
+		// the procedure of processes except Process 0.
 		else{
 			Object c;
 			Block b;
@@ -89,9 +97,10 @@ public class MiningNode extends Process
 					miner.setBlock(blockChain.get(blockChain.size() - 1));
 					Result r = checkHashValues(miner.getHashValues()); // obtain hash values.
 					if(r != null) {
-						b = createBlock(r, blockChain);
-						addBlockToChain(b,blockChain);
-						broadcastBlock(id, b);
+						b = createBlock(r, blockChain); // create a block if there is an eligible hash value.
+						addBlockToChain(b,blockChain);  // add the created block into the chain.
+						miner.updateBlock(b);  // update the block as the latest block in the miner.
+						broadcastBlock(id, b); // broadcast the block to every other processes.
 						
 					System.out.print("Found at Process " + id + "=>>");
 					System.out.print("Result: "+r.getHashValue().toString(16));
@@ -106,7 +115,7 @@ public class MiningNode extends Process
 				catch(InterruptedException e){}
 			}
 
-			outputChain(id, blockChain);
+			outputChain(id, blockChain); // output information of each block in the chain.
 
 
 		}
@@ -147,7 +156,7 @@ public class MiningNode extends Process
 		Object c;
 		if ((c = receive()) != null) {
 			Block b = (Block) ((Message)c).getContent();
-			System.out.println("Proc. "+id+": receive a block of "+b.getOwnHash().toString(16));
+			System.out.println("Proc. "+id+": received a block of "+b.getOwnHash().toString(16));
 
 			return b;
 		}
@@ -192,6 +201,7 @@ public class MiningNode extends Process
 		b.setPrevHash(bchain.get(bchain.size() - 1).getOwnHash());
 		b.setNonce(r.getNonce());
 		b.setDifficultyBits(r.getDifficultyBits());
+		b.setTimestamp(Calendar.getInstance().getTime().toString());
 
 		return b;
 	}
@@ -228,12 +238,16 @@ public class MiningNode extends Process
 		return false;
 	}
 
+	/**
+	* print information of each block in a chain.
+	*/
 	private void printChain(int id, ArrayList<Block> chain) {
 		
 			System.out.println("==============" + "Process " + id);
 			for (Block blk : chain) {
 				System.out.println(blk.getBlockNum() + ": prev_hash = " + blk.getPrevHash().toString(16) +
 									", own_hash = " + blk.getOwnHash().toString(16));
+				// System.out.println(blk.getData().getContent());
 			}
 			System.out.println("==============");
 		
@@ -241,7 +255,7 @@ public class MiningNode extends Process
 	}
 
 	/**
-	* output the own chain as a csv file.
+	* output the own chain as a file in the csv format.
 	*/
 	private void outputChain(int id, ArrayList<Block> chain) {
 		OutputBlocks ob = new OutputBlocks(id, chain);
@@ -249,7 +263,7 @@ public class MiningNode extends Process
 	}
 
 	/**
-	* debug output
+	* debug output on a screen.
 	*/
 	private void debugPrint(String st) {
 		if(debug == true) {

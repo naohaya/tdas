@@ -4,14 +4,14 @@ public class Data
 	private String data;
 
 	public Data(String data) {
-		this.setData(data);
+		this.setContent(data);
 	}
 
-	public void setData(String data) {
+	public void setContent(String data) {
 		this.data = data;
 	}
 
-	public String getData() {
+	public String getContent() {
 		return this.data;
 	}
 }
