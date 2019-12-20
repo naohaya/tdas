@@ -1,3 +1,10 @@
+/**
+* This class is for outputting the hash values of blocks in the chain at the process 0 in CSV format.
+* 
+* @author Naohiro Hayashibara
+*
+*/
+
 import java.io.*;
 import java.util.ArrayList;
 
@@ -10,8 +17,11 @@ public class OutputBlocks {
 		this.id = id;
 	}
 
+	/**
+	* Output the prev. hash values and the own hash values of blocks in the chain.
+	*/
 	public void output() {
-		String filename = "process" + this.id + ".log";
+		String filename = "process" + this.id + ".csv";
 		try{
 			File file = new File(filename);
 			FileWriter fw = new FileWriter(file);

@@ -1,3 +1,11 @@
+/**
+* This class is for mining hash values.
+* Once created a mining object, it should be shared among processes.
+* 
+* @author Naohiro Hayashibara
+*
+*/
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.math.BigInteger;
@@ -31,6 +39,7 @@ class Miner
 	/**
 	* Obtaining hash values from outside.
 	* It requires mutual exclusive access.
+	* @return Returns a list of {@link Result}s mined with the size defined at {@code maxMiningValues} (100 as a default).
 	*/
 	public synchronized ArrayList<Result> getHashValues() {
 		return mining(this.latestBlock);
@@ -46,6 +55,7 @@ class Miner
 	/**
 	* Creates a digest string from a block.
 	* @param block is the block to generate hash values by using its block header.
+	* @return Returns a digest string as {@code String}.
 	*/
 	public static String createDigest(Block block) {
 		String digest = Integer.toString(block.getBlockNum()) 
@@ -80,7 +90,7 @@ class Miner
 
 	/**
 	* Gets the latest block. 
-	* 
+	* @return Returns the latest block registered.
 	*/
 	public Block getBlock(){
 		if (latestBlock != null) {
@@ -101,6 +111,7 @@ class Miner
 
 	/**
 	* To get the current nonce.
+	* @return Returns the current nonce value as {@code long}.
 	*/
 	public long getNonce() {
 		return this.nonce;
@@ -116,6 +127,7 @@ class Miner
 
 	/**
 	* To get the current difficulty bits. 
+	* @return Returns the current difficulty bits as {@code int}. 
 	*/
 	public int getDifficultyBits() {
 		return this.difficultyBits;
@@ -130,6 +142,7 @@ class Miner
 
 	/**
 	* Creates an initial block by using mining().
+	* @return Returns an initial block.
 	*/
 	public Block createInitialBlock() {
 		boolean flag = true;
@@ -163,6 +176,7 @@ class Miner
 	* Creates a hash value using the sha3_256 algorithm from a digest and a nonce.
 	* @param digest is a digest of a block header. 
 	* @param nonce is the current nonce.
+	* @return Returns a hashed digest as {@code String}. 
 	*/
 	public static String createHashedDigest(String digest, long nonce) {
 		String result = DigestUtils.sha3_256Hex(digest+Long.toString(nonce));
@@ -173,6 +187,7 @@ class Miner
 	* Generates a target for mining. 
 	* The value should be the block hash if it is smaller than the target.
 	* @param diffbits is the difficulty bits to generate the corresponding target. 
+	* @return Returns the generated criterion of mining as {@code BigInteger}.
 	*/
 	public static BigInteger generatingTarget(int diffbits) {
 		BigInteger new_target = BigInteger.valueOf(2);
@@ -183,6 +198,7 @@ class Miner
 
 	/**
 	* getTarget is to get the current target.
+	* @return Returns the current criterion of mining as {@code BigInteger}.
 	*/ 
 	public BigInteger getTarget() {
 		return this.target;
@@ -192,6 +208,7 @@ class Miner
 	* Mining hash values using the latest block. 
 	* It generates the designated num. of hash values declared as maxMiningValues.  
 	* @param block is the current latest block in the chain.
+	* @return Returns a list of {@link Result} including mined hash values and nonce values.
 	*/
 	private ArrayList<Result> mining(Block block) {
 		ArrayList<Result> results = new ArrayList<Result>();
@@ -224,7 +241,7 @@ class Miner
 	* Judgeing the hash value is eligible or not according to the target.
 	* @param target is the target to judge hash values. 
 	* @param hashValue is a mined hash value. 
-	* @return it returns {@code true} if the hash value is smaller than the target and it is eligible as new block hash. 
+	* @return Returns {@code true} if the hash value is smaller than the target and it is eligible as new block hash. 
 	*/
 	public static boolean isHit(BigInteger target, BigInteger hashValue) {
 		if(target.compareTo(hashValue) == 1) {
