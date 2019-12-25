@@ -280,11 +280,14 @@ public class MiningNode extends Process
 	* @param bchain the chain of blocks in the node.
 	*/
 	private void addBlockToChain(Block block, ArrayList<Block> bchain){
+
 		if(bchain.size() > 0){
 			for(Block b : bchain) {
 				if(b.getOwnHash().compareTo(block.getPrevHash()) == 0) {
 					block.setBlockNum(bchain.get(bchain.size() - 1).getBlockNum() + 1);
 					bchain.add(block);
+					break;
+					
 				}
 			}
 		}
