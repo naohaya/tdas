@@ -7,14 +7,9 @@
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.CancellationException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
-
 
 public class Simulator {
 	/* global variables */
@@ -34,41 +29,6 @@ public class Simulator {
 	*/
 	Boolean measure = false;
 
-	/**
-	* 故障発生用配列
-	*/
-	ArrayList<Integer> failure = new ArrayList<Integer>();
-
-	/**
-	* ランダム故障用フラグ
-	*/
-	Boolean randomFailure = false;
-
-	/**
-	* ランダム故障用故障確率
-	*/
-	double fprob = 0.2;
-
-	/**
-	* 静的故障用フラグ
-	*/
-	Boolean staticFailure = false;
-
-	/**
-	* 静的故障用故障プロセス数
-	*/
-	int fnum = 0;
-
-	/**
-	* プロセス故障用フラグ
-	*/ 
-	Boolean pfailure = false;
-
-
-	/**
-	* Log出力用フラグ
-	*/
-	Boolean log = false;
 	
 	public static void main(String[] args){
 		Simulator sim = new Simulator();
@@ -94,40 +54,6 @@ public class Simulator {
             else if(Objects.equals(args[i], "-c")){          	
                 this.cname = args[++i];
                 className = true;
-            }
-            else if(Objects.equals(args[i], "-l")){
-            	this.log = true;
-            } 
-            else if(Objects.equals(args[i], "-rf")){
-            	if(this.staticFailure) {
-            		System.out.println("Can not set random and static failure.");
-            		printHelp();
-            		System.exit(1);
-            	}
-            	this.randomFailure = true;
-            	try{
-            		this.fprob = Double.parseDouble(args[++i]);
-            	} catch (NumberFormatException e) {
-            		printHelp();
-            		System.exit(1);
-            	}
-            }
-            else if(Objects.equals(args[i], "-sf")){
-            	if(this.randomFailure) {
-            		System.out.println("Can not set random and static failure.");
-            		printHelp();
-            		System.exit(1);
-            	} 
-
-            	this.staticFailure = true;
-            	try{
-            		this.fnum = Integer.parseInt(args[++i]);
-            	} catch (NumberFormatException e) {
-            		printHelp();
-            		System.exit(1);
-            	}
-
-            	
             }
             else if(Objects.equals(args[i], "-p")){
 
@@ -158,75 +84,11 @@ public class Simulator {
         if (!numOfProcesses) {
         	num = 10;
         }
-        if (this.num <= this.fnum) {
-        	// if the num. of failed proc. exceeds the total num. of proc.
-       		System.out.println("Too many failed processes.");
-       		printHelp();
-       		System.exit(1);
-        }
         if (!className) {
         	printHelp();
         	System.exit(1);
         }
-
-        // for failure
-        failureConfiguration();
-        
     }
-
-    /**
-    * 故障確率を返す
-    */
-    double getFprob(){
-    	return this.fprob;
-    }
-
-    /**
-    * 故障フラグを設定する
-    */
- 	void setFailure(boolean f) {
- 		this.pfailure = f;
- 	}
-
- 	/**
- 	* 故障フラグの情報を得る
- 	*/
- 	Boolean getFailure(){
- 		return this.pfailure;
- 	}
-
- 	/**
- 	*
- 	*/
- 	void failureConfiguration(){
- 		// for failure
-        if (randomFailure) {
-        	for (int pnum = 0; pnum < this.num; pnum++) {
-        		double d = 0.0;
-        		d = Math.random();
-        		if (d < getFprob()) {
-        			failure.add(pnum);
-        		}
-        	}
-        }
-
-        // for failure
-        if (staticFailure){
-        	while(failure.size() < this.fnum) {
-        		int p = (int) (Math.random()*this.num);
-        		Iterator<Integer> iter = failure.iterator();
-        		boolean dup = false;
-	        	while(iter.hasNext()){
-    	    		if(p == iter.next())
-        				dup = true;
-        		}
-        		if (dup == false) {
-        			failure.add(p);
-        		}
-        	}
-        }
- 	}
-
 
     /**
     * 与えられたクラスを指定された数のスレッドで実行する
@@ -243,10 +105,10 @@ public class Simulator {
 		MessageQueue mq = new MessageQueue(getNum());
 		
 		// type of callee class
-		Class<?>[] types = {int.class, MessageQueue.class, boolean.class};
+		Class<?>[] types = {int.class, MessageQueue.class};
 		
 		// args of callee class
-		Object[] arg = {null, null, null};
+		Object[] arg = {null, null};
 		
 		// add the message queue to share in all processes
 		arg[1] = mq;
@@ -255,28 +117,10 @@ public class Simulator {
 		List<Future<?>> list = new ArrayList<Future<?>>();
 		if(isMeasure())
 			timer.start();
-
-		
 		try{	
 			for (int i = 0; i < getNum(); i++) {
 				//add the id of process
 				arg[0] = Integer.valueOf(i);
-				
-				// for failure
-				Iterator<Integer> iter = failure.iterator();
-				boolean fflag = false;
-				while(iter.hasNext()){
-					if(iter.next() == i) {
-						setFailure(true);
-						arg[2] = getFailure(); // failed
-						fflag = true;
-						break;
-					}
-				}
-				if (fflag == false) {
-					setFailure(false);
-					arg[2] = getFailure(); // not failed
-				}
 				
 				// get the constructor
 				Constructor<?> cnst = Class.forName(getCname()).getConstructor(types);
@@ -284,31 +128,6 @@ public class Simulator {
 				// instanciate the class then start it
 				Future<?> future = exec.submit((Process)cnst.newInstance(arg));	
 				list.add(future);
-				
-				// for failure
-				Iterator<Integer> flistIter = failure.iterator(); // for failure
-				if(randomFailure || staticFailure) {
-					while(flistIter.hasNext()){
-						if(flistIter.next() == i) {
-							try{
-								//long time = future.get(500, TimeUnit.MILLISECONDS);
-								future.cancel(true); // return true
-								future.get(50, TimeUnit.MILLISECONDS);
-							} catch (InterruptedException e) {
-								e.printStackTrace();
-							} catch (ExecutionException e){
-								e.printStackTrace();
-							} catch (TimeoutException e) {
-								e.printStackTrace();
-							} catch (CancellationException can) {
-								// nothing to do
-							}
-
-						}
-					}
-					
-				}
-				
 
 			}
 		} catch (ClassNotFoundException e){
@@ -321,7 +140,7 @@ public class Simulator {
 			e.printStackTrace();
 		} catch (InvocationTargetException e) {
 			e.printStackTrace();
-		} 
+		}
 
 		exec.shutdown();
 		// create processes as threads --obsolete--
@@ -368,11 +187,7 @@ public class Simulator {
 			// wait for all threads dispatched.
 		try {
 			for (Future<?> future : list) {
-				try{
-					future.get();
-				} catch (CancellationException can) {
-
-				}
+				future.get();
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -404,23 +219,8 @@ public class Simulator {
     */
     void printSummary(){
     	System.out.println("-----");
-    	System.out.println("Execution of "+cname+".class completed with "+num+" processes.");
-    	if(randomFailure||staticFailure){
-    		failureSummary();
-    	}
+    	System.out.println("Execution of "+cname+" completed with "+num+" processes.");
 
-    }
-
-    /**
-    * 故障のサマリを出力する
-    */
-    void failureSummary(){
-    	System.out.print("Failed: ");
-    	Iterator<Integer> iter = failure.iterator();
-    	while(iter.hasNext()){
-    		System.out.print(iter.next()+" ");
-    	}
-    	System.out.println("");
     }
 
     /**
