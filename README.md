@@ -3,7 +3,7 @@
 ## tdas (Tiny Distributed Algorithm Simulator)
 
 <p align="left">
-京都産業大学 情報理工学部/コンピュータ理工学部の専門科目「分散処理システム」において2025年度まで使用していた分散アルゴリズム実装用の簡易シミュレータです．<br/>
+京都産業大学 情報理工学部/コンピュータ理工学部の専門科目「分散処理システム」において2025年度まで使用していた分散アルゴリズム実装用の簡易シミュレータです．
 </p>
 
 ## 動作環境
@@ -23,6 +23,12 @@
 ## シミュレータ上で動作するプログラムの作成について
 
 <p align="left">
-  クラスProcessを継承する形で実装し，コンパイルしたclassファイルのクラス名をSimulatorに引数として渡すことで動作します．<br/>
+  クラスProcessを継承する形で実装し，コンパイルしたclassファイルのクラス名をSimulatorに引数として渡すことで動��します．<br/>
   詳細についてはTestAlgorithm.javaを参考にしてください．
 </p>
+
+## ライセンス
+
+Copyright (c) 2025 Kyoto Sangyo University
+
+All rights reserved.
