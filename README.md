@@ -23,12 +23,12 @@
 ## シミュレータ上で動作するプログラムの作成について
 
 <p align="left">
-  クラスProcessを継承する形で実装し，コンパイルしたclassファイルのクラス名をSimulatorに引数として渡すことで動��します．<br/>
+  クラスProcessを継承する形で実装し，コンパイルしたclassファイルのクラス名をSimulatorに引数として渡すことで動作します．<br/>
   詳細についてはTestAlgorithm.javaを参考にしてください．
 </p>
 
 ## ライセンス
 
-Copyright (c) 2025 Kyoto Sangyo University
+Copyright (c) 2025 Naohiro Hayashibara
 
 All rights reserved.
